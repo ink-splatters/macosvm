@@ -181,15 +181,14 @@ attachmentWasDisconnectedWithError:(NSError *)error {
                 [[NSRunningApplication currentApplication] activateWithOptions:NSApplicationActivateAllWindows];
             }
 
-            { /* we have to make us foreground process so we can receive keyboard
-                 events - I know of no way that doesn't involve deprecated API .. */
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-                void CPSEnableForegroundOperation(ProcessSerialNumber* psn);
-                ProcessSerialNumber myProc;
-                if (GetCurrentProcess(&myProc) == noErr)
-                    CPSEnableForegroundOperation(&myProc);
-#pragma clang diagnostic pop
+            {
+              ProcessSerialNumber psn = {0, kCurrentProcess};
+              OSStatus result = TransformProcessType(&psn, kProcessTransformToForegroundApplication);
+              if (result != 0)
+              {
+                   NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result userInfo:nil];
+			NSLog(@"TransformProcessType failed with error - %@", error);
+	      }
             }
         }
 
